@@ -34,7 +34,7 @@ class RandomHorizontalFlip(T.RandomHorizontalFlip):
         if torch.rand(1) < self.p:
             image = F.hflip(image)
             if target is not None:
-                _, _, width = F.get_dimensions(image)
+                _, _, width = F.get_image_size(image)
                 target["boxes"][:, [0, 2]] = width - target["boxes"][:, [2, 0]]
                 if "masks" in target:
                     target["masks"] = target["masks"].flip(-1)
@@ -98,7 +98,7 @@ class RandomIoUCrop(nn.Module):
             elif image.ndimension() == 2:
                 image = image.unsqueeze(0)
 
-        _, orig_h, orig_w = F.get_dimensions(image)
+        _, orig_h, orig_w = F.get_image_size(image)
 
         while True:
             # sample an option
@@ -183,7 +183,7 @@ class RandomZoomOut(nn.Module):
         if torch.rand(1) >= self.p:
             return image, target
 
-        _, orig_h, orig_w = F.get_dimensions(image)
+        _, orig_h, orig_w = F.get_image_size(image)
 
         r = self.side_range[0] + torch.rand(1) * (self.side_range[1] - self.side_range[0])
         canvas_width = int(orig_w * r)
@@ -261,7 +261,7 @@ class RandomPhotometricDistort(nn.Module):
                 image = self._contrast(image)
 
         if r[6] < self.p:
-            channels, _, _ = F.get_dimensions(image)
+            channels, _, _ = F.get_image_size(image)
             permutation = torch.randperm(channels)
 
             is_pil = F._is_pil_image(image)
@@ -308,7 +308,7 @@ class ScaleJitter(nn.Module):
             elif image.ndimension() == 2:
                 image = image.unsqueeze(0)
 
-        _, orig_height, orig_width = F.get_dimensions(image)
+        _, orig_height, orig_width = F.get_image_size(image)
 
         scale = self.scale_range[0] + torch.rand(1) * (self.scale_range[1] - self.scale_range[0])
         r = min(self.target_size[1] / orig_height, self.target_size[0] / orig_width) * scale
@@ -381,7 +381,7 @@ class FixedSizeCrop(nn.Module):
         return img, target
 
     def forward(self, img, target=None):
-        _, height, width = F.get_dimensions(img)
+        _, height, width = F.get_image_size(img)
         new_height = min(height, self.crop_height)
         new_width = min(width, self.crop_width)
 
@@ -418,7 +418,7 @@ class RandomShortestSize(nn.Module):
     def forward(
         self, image: Tensor, target: Optional[Dict[str, Tensor]] = None
     ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
-        _, orig_height, orig_width = F.get_dimensions(image)
+        _, orig_height, orig_width = F.get_image_size(image)
 
         min_size = self.min_size[torch.randint(len(self.min_size), (1,)).item()]
         r = min(min_size / min(orig_height, orig_width), self.max_size / max(orig_height, orig_width))
